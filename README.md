@@ -42,7 +42,7 @@ Declare the flake as an input **with nixpkgs following yours** — this keeps a 
 ```nix
 # flake.nix
 inputs.artcraft = {
-  url = "github:rmichaelolsen/artcraft"; # adjust to the pushed remote
+  url = "github:MajorR/artcraft-flake";
   inputs.nixpkgs.follows = "nixpkgs";
 };
 ```
@@ -62,7 +62,7 @@ home.packages = [
 ];
 ```
 
-NixOS-wide instead: `environment.systemPackages = [ ... ]` with the same attribute paths. One-off try without importing: `nix run github:rmichaelolsen/artcraft#photocraft`.
+NixOS-wide instead: `environment.systemPackages = [ ... ]` with the same attribute paths. One-off try without importing: `nix run github:MajorR/artcraft-flake#photocraft`.
 
 Caveats:
 
