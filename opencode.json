@@ -1,0 +1,52 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "small_model": "zai-coding-plan/glm-5.3-flash",
+  "plugin": [
+    "opencode-background-agents",
+    "opencode-pty",
+    "opencode-scheduler",
+    "opencode-worktree",
+    "opencode-usage-monitor"
+  ],
+  "lsp": {
+    "nixd": {
+      "command": [
+        "nixd"
+      ],
+      "initialization": {
+        "formatting": {
+          "command": [
+            "nixfmt"
+          ]
+        },
+        "nixpkgs": {
+          "expr": "import (builtins.getFlake \"/home/rmichaelolsen/Projects/nix/artcraft\").inputs.nixpkgs { }"
+        }
+      }
+    }
+  },
+  "mcp": {
+    "tavily": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "tavily-mcp"
+      ],
+      "environment": {
+        "TAVILY_API_KEY": "{env:TAVILY_API_KEY}"
+      }
+    }
+  },
+  "permission": {
+    "bash": {
+      "nix*": "allow",
+      "nixfmt*": "allow",
+      "just*": "allow",
+      "devenv*": "allow",
+      "direnv*": "allow",
+      "gh release*": "allow",
+      "gh api*": "allow"
+    }
+  }
+}
