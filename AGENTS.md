@@ -16,15 +16,15 @@ Nix flake packaging the **ArtCraft Crafting Apps** suite (https://getartcraft.co
 
 | Suite | Apps | Mimics |
 |---|---|---|
-| `creative` | photocraft 0.3.0, vectorcraft 0.4.0, lightcraft 0.2.1, filmcraft 0.2.1, effectcraft 0.4.0, designcraft 0.2.1 | Photoshop, Illustrator, Lightroom, Premiere Pro, After Effects, InDesign |
-| `office` | wordcraft 0.1.0, gridcraft 0.1.0, deckcraft 0.1.0, printcraft 0.2.1 | Word, Excel, PowerPoint, Acrobat Pro |
-| `cad` | cadcraft 0.1.0 | AutoCAD |
+| `creative` | photocraft 0.5.0, vectorcraft 0.7.0, lightcraft 0.4.0, filmcraft 0.4.0, effectcraft 0.6.0, designcraft 0.4.0 | Photoshop, Illustrator, Lightroom, Premiere Pro, After Effects, InDesign |
+| `office` | wordcraft 0.3.0, gridcraft 0.3.0, deckcraft 0.3.0, pdfcraft 0.4.0 | Word, Excel, PowerPoint, Acrobat Pro |
+| `cad` | cadcraft 0.3.0 | AutoCAD |
 | `all` | everything above + **craft-fonts** | — |
 
 - `craft-fonts` is a real (non-placeholder) package: fonts are plain assets in the repo, pinned rev, OFL-1.1; installed to `$out/share/fonts/{truetype,opentype}`. Only included in `suites.all` — apps/users pick it up explicitly.
-- **printcraft got renamed upstream to `pdfcraft`** — release assets and the binary are still `printcraft-*`, so `pname = "printcraft"`, `repo = "storytold/pdfcraft"`. Watch for upstream flipping asset names.
+- **printcraft was renamed upstream to `pdfcraft`** — the repo long ago, and as of v0.4.0 the release assets and binary are `pdfcraft-*` too, so our pname followed (`pkgs/by-name/pdfcraft.nix`). Anyone consuming `.#printcraft` must switch to `.#pdfcraft`.
 - **Not packaged** (no Linux releases upstream): `artcraft` (macOS/Windows only) and `soundcraft` (no releases at all). Add them when Linux assets appear — a new app file + a suite entry is all it takes.
-- Verify versions with `just releases <app>`; the tables above are a snapshot.
+- **Upstream releases multiple times per day.** Versions here are batched snapshots — check drift with `just outdated`, catch up with `just bump-all`; don't chase every release (each bump re-downloads ~60MB per app per building machine).
 
 ## Packaging decision (2026-10-08): tarball, with a dlopen wrapper
 

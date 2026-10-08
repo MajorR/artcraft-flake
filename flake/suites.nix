@@ -17,8 +17,8 @@
         filmcraft
         gridcraft
         lightcraft
+        pdfcraft
         photocraft
-        printcraft
         vectorcraft
         wordcraft
         ;
@@ -34,7 +34,7 @@
       office = [
         deckcraft
         gridcraft
-        printcraft
+        pdfcraft
         wordcraft
       ];
       cad = [ cadcraft ];

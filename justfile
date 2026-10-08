@@ -20,3 +20,11 @@ releases app:
 # bump an app to a new upstream release, e.g. just bump photocraft 0.4.0
 bump app version:
     script/bump-app.sh {{app}} {{version}}
+
+# show which apps are behind upstream's latest releases
+outdated:
+    script/check-outdated.sh
+
+# bump every outdated app to its latest release
+bump-all:
+    script/bump-all.sh

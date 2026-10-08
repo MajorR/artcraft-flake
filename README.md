@@ -10,10 +10,12 @@ Packages come flat (`.#photocraft`) and grouped into suite bundles (`.#suites.of
 
 | Suite | Apps (upstream version) |
 |---|---|
-| `creative` | photocraft (0.3.0), vectorcraft (0.4.0), lightcraft (0.2.1), filmcraft (0.2.1), effectcraft (0.4.0), designcraft (0.2.1) |
-| `office` | wordcraft (0.1.0), gridcraft (0.1.0), deckcraft (0.1.0), printcraft (0.2.1) |
-| `cad` | cadcraft (0.1.0) |
+| `creative` | photocraft (0.5.0), vectorcraft (0.7.0), lightcraft (0.4.0), filmcraft (0.4.0), effectcraft (0.6.0), designcraft (0.4.0) |
+| `office` | wordcraft (0.3.0), gridcraft (0.3.0), deckcraft (0.3.0), pdfcraft (0.4.0) |
+| `cad` | cadcraft (0.3.0) |
 | `all` | everything above + [craft-fonts](https://github.com/storytold/craft-fonts) (OFL-licensed CJK/Arabic fonts) |
+
+Upstream releases multiple times per day — pins here are batched snapshots. Check drift with `just outdated`, catch up with `just bump-all`. Note: printcraft was renamed upstream to **pdfcraft** (binary and assets flipped in v0.4.0).
 
 ## Usage
 
