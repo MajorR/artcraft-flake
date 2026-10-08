@@ -4,7 +4,7 @@ Nix flake packaging the [ArtCraft Crafting Apps](https://getartcraft.com/apps) �
 
 ## Status
 
-**Scaffold.** Package stubs exist for the craft apps; each builds a placeholder binary (`craft-fonts` is a real package). The real packaging source (tarball vs RPM vs AppImage) is pending design — see [AGENTS.md](AGENTS.md) for the analysis and current upstream facts.
+**Real release-tarball packaging** for the 11 apps with Linux assets — binaries are unpacked, auto-patched to Nix's glibc, and wrapped with `LD_LIBRARY_PATH` for their dlopen'd GUI stack (EGL/Vulkan/X11/wayland/xkbcommon). `photocraft-cli --version` and friends run natively. Placeholders remain for **artcraft** (upstream has no Linux builds — future source build) and **soundcraft** (no releases yet); **craft-fonts** packages repo assets directly. Decision rationale and binary facts live in [AGENTS.md](AGENTS.md).
 
 Packages come flat (`.#photocraft`) and grouped into suite bundles (`.#suites.office`):
 
@@ -24,7 +24,7 @@ The `artcraft` crafting engine itself will eventually need a from-source build.
 ```bash
 nix build .#photocraft    # or any app name
 nix build .#suites.office # a whole suite bundle
-nix run .#photocraft      # placeholder prints "not implemented" (for now)
+nix run .#photocraft      # launches the real app (needs a display)
 ```
 
 ## Development

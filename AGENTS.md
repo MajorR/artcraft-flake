@@ -28,21 +28,24 @@ Nix flake packaging the **ArtCraft Crafting Apps** suite (https://getartcraft.co
 - Apps without Linux release assets carry `linuxAssets = false` (visible in `passthru.upstream`) so the real builder can skip/special-case them.
 - Verify versions with `just releases <app>`; the tables above are a snapshot.
 
-## Open design decision
+## Packaging decision (2026-10-08): tarball, with a dlopen wrapper
 
-**Tarball vs RPM (vs AppImage/flatpak) as the packaging source.** The choice is isolated to exactly one file: `lib/mk-craft-app.nix`. Per-app files under `pkgs/by-name/` carry metadata only and stay format-agnostic. Facts to weigh:
+**The release tarball is the packaging source.** Verified on photocraft v0.3.0: the `.tar.gz`, `.rpm`, and `.deb` assets carry byte-identical payloads, so the tarball wins on fetch/unpack simplicity (`fetchurl` + default unpack, no rpm2cpio/cpio in the sandbox). Asset naming is uniform: `{pname}-{version}-linux-{x86_64|aarch64}.tar.gz`. AppImage/flatpak rejected (squashfs extraction, no benefit). The RPM's only unique content — its auto-generated `requires:` list — documents the dlopen surface and is reproduced in `defaultRuntimeLibs` inside `lib/mk-craft-app.nix`.
 
-- **tarball**: simplest to unpack; binaries need rpath/interpreter fixing (patchelf / autoPatchelfHook); check the archive layout is stable across releases.
-- **RPM**: carries versioned dependency metadata (useful hints about required libs); Nix ignores the deps but the file list is explicit.
-- **AppImage**: self-contained; awkward under Nix (extract-then-patch or appimage-run).
-- All assets ship with `SHA256SUMS.txt` — fetch and verify when bumping versions.
+Binary facts (all apps built the same way upstream):
 
-Today `lib/mk-craft-app.nix` emits a placeholder derivation (stub binary that prints "not implemented") so the flake evaluates and builds end-to-end. `artcraft` will need a from-source build (its Rust repo), not a release-asset repackage — separate builder path, future task.
+- Nearly-static Rust: `NEEDED` is only `libgcc_s`/`libm`/`libc` (glibc 2.35 build); no RPATH. `autoPatchelfHook` fixes the interpreter + libgcc — note `libgcc_s.so.1` needs the explicit `libgcc` buildInput (not in stdenv glibc).
+- The GUI stack (winit/wgpu-style, **not** Tauri — no webkit2gtk) is **dlopen'd at runtime** and invisible to ldd/patchelf: EGL, Vulkan, X11/xcb/Xcursor/Xi, xkbcommon(+x11), wayland. Every shipped binary is `wrapProgram`'d with `LD_LIBRARY_PATH` over `defaultRuntimeLibs ++ runtimeLibs`.
+- Desktop file uses bare `Exec=<app>` — works as-is under the wrapper.
+- Verify checksums against each release's `SHA256SUMS.txt` when bumping versions (convert: `nix hash convert --to sri --hash-algo sha256 <hex>`).
+
+Placeholder path kept for `linuxAssets = false` apps (`artcraft` needs a from-source build — separate builder task; `soundcraft` has no releases yet).
 
 ## Structure rules
 
 - `lib/mk-craft-app.nix` is the **single builder** — every packaging/format decision lives there. Don't hand-roll derivations in app files (exceptions so far: `craft-fonts`, which packages plain repo assets).
-- `pkgs/by-name/<app>.nix` is **metadata only** (pname, version, repo, description, `linuxAssets`). Files are auto-discovered via `lib.packagesFromDirectoryRecursive`.
+- `pkgs/by-name/<app>.nix` is **metadata only** (pname, version, repo, description, `hashes`, optional `runtimeLibs`, `linuxAssets`). Files are auto-discovered via `lib.packagesFromDirectoryRecursive`.
+- **Bumping a version** = update `version` + both `hashes` in the app file (take hex from `SHA256SUMS.txt`, convert to SRI). If a new app dlopens more libs, extend `runtimeLibs` in its file — the GUI base set stays in the builder.
 - **Adding an app** = create `pkgs/by-name/<app>.nix`, then add it to a suite list in `flake/suites.nix`. Two touches, never structural change.
 - **Adding a suite** = one list + one line in `flake/suites.nix`.
 - `flake/dev-shell-packages.nix` is the single source of truth for dev tooling — both the flake devShell (direnv `use flake`) and devenv.nix import it. Add tools there only.
