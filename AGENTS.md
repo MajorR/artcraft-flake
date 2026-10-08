@@ -19,13 +19,11 @@ Nix flake packaging the **ArtCraft Crafting Apps** suite (https://getartcraft.co
 | `creative` | photocraft 0.3.0, vectorcraft 0.4.0, lightcraft 0.2.1, filmcraft 0.2.1, effectcraft 0.4.0, designcraft 0.2.1 | Photoshop, Illustrator, Lightroom, Premiere Pro, After Effects, InDesign |
 | `office` | wordcraft 0.1.0, gridcraft 0.1.0, deckcraft 0.1.0, printcraft 0.2.1 | Word, Excel, PowerPoint, Acrobat Pro |
 | `cad` | cadcraft 0.1.0 | AutoCAD |
-| `art` | artcraft 0.41.0 — **placeholder, no Linux assets** (macOS/Windows releases only) | — (AI crafting engine) |
-| `audio` | soundcraft — **placeholder, no releases yet** (repo exists) | Pro Tools |
 | `all` | everything above + **craft-fonts** | — |
 
 - `craft-fonts` is a real (non-placeholder) package: fonts are plain assets in the repo, pinned rev, OFL-1.1; installed to `$out/share/fonts/{truetype,opentype}`. Only included in `suites.all` — apps/users pick it up explicitly.
 - **printcraft got renamed upstream to `pdfcraft`** — release assets and the binary are still `printcraft-*`, so `pname = "printcraft"`, `repo = "storytold/pdfcraft"`. Watch for upstream flipping asset names.
-- Apps without Linux release assets carry `linuxAssets = false` (visible in `passthru.upstream`) so the real builder can skip/special-case them.
+- **Not packaged** (no Linux releases upstream): `artcraft` (macOS/Windows only) and `soundcraft` (no releases at all). Add them when Linux assets appear — a new app file + a suite entry is all it takes.
 - Verify versions with `just releases <app>`; the tables above are a snapshot.
 
 ## Packaging decision (2026-10-08): tarball, with a dlopen wrapper
@@ -37,15 +35,14 @@ Binary facts (all apps built the same way upstream):
 - Nearly-static Rust: `NEEDED` is only `libgcc_s`/`libm`/`libc` (glibc 2.35 build); no RPATH. `autoPatchelfHook` fixes the interpreter + libgcc — note `libgcc_s.so.1` needs the explicit `libgcc` buildInput (not in stdenv glibc).
 - The GUI stack (winit/wgpu-style, **not** Tauri — no webkit2gtk) is **dlopen'd at runtime** and invisible to ldd/patchelf: EGL, Vulkan, X11/xcb/Xcursor/Xi, xkbcommon(+x11), wayland. Every shipped binary is `wrapProgram`'d with `LD_LIBRARY_PATH` over `defaultRuntimeLibs ++ runtimeLibs`.
 - Desktop file uses bare `Exec=<app>` — works as-is under the wrapper.
-- Verify checksums against each release's `SHA256SUMS.txt` when bumping versions (convert: `nix hash convert --to sri --hash-algo sha256 <hex>`).
-
-Placeholder path kept for `linuxAssets = false` apps (`artcraft` needs a from-source build — separate builder task; `soundcraft` has no releases yet).
+- filmcraft, effectcraft, and deckcraft link `libasound.so.2` directly (NEEDED) — they carry `runtimeLibs = [ alsa-lib ]` in their app files.
+- Verify checksums against each release's `SHA256SUMS.txt` when bumping versions (convert: `nix hash convert --to sri --hash-algo sha256 <hex>` — or just use `just bump`).
 
 ## Structure rules
 
 - `lib/mk-craft-app.nix` is the **single builder** — every packaging/format decision lives there. Don't hand-roll derivations in app files (exceptions so far: `craft-fonts`, which packages plain repo assets).
-- `pkgs/by-name/<app>.nix` is **metadata only** (pname, version, repo, description, `hashes`, optional `runtimeLibs`, `linuxAssets`). Files are auto-discovered via `lib.packagesFromDirectoryRecursive`.
-- **Bumping a version** = update `version` + both `hashes` in the app file (take hex from `SHA256SUMS.txt`, convert to SRI). If a new app dlopens more libs, extend `runtimeLibs` in its file — the GUI base set stays in the builder.
+- `pkgs/by-name/<app>.nix` is **metadata only** (pname, version, repo, description, `hashes`, optional `runtimeLibs`). Files are auto-discovered via `lib.packagesFromDirectoryRecursive`.
+- **Bumping a version** = `just bump <app> <version>` — fetches the release's `SHA256SUMS.txt`, rewrites `version` + both SRI `hashes`, nixfmts. Then `git diff && just check && nix build .#<app>`. If a new app dlopens more libs, extend `runtimeLibs` in its file — the GUI base set stays in the builder.
 - **Adding an app** = create `pkgs/by-name/<app>.nix`, then add it to a suite list in `flake/suites.nix`. Two touches, never structural change.
 - **Adding a suite** = one list + one line in `flake/suites.nix`.
 - `flake/dev-shell-packages.nix` is the single source of truth for dev tooling — both the flake devShell (direnv `use flake`) and devenv.nix import it. Add tools there only.
@@ -63,4 +60,5 @@ just fmt                  # nixfmt all project nix files
 just check                # nix flake check
 just build <app>          # nix build .#<app>
 just releases <app>       # latest upstream releases via gh
+just bump <app> <version> # rewrite version + SRI hashes from SHA256SUMS.txt
 ```

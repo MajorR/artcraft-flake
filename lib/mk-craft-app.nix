@@ -8,19 +8,19 @@
 #
 # Binary facts (verified on photocraft v0.3.0; apps are built the same way
 # upstream): nearly-static Rust — NEEDED is only libgcc_s/libm/libc on a
-# glibc-2.35 build — while the winit/wgpu-style GUI stack (EGL, Vulkan,
-# X11, xkbcommon, wayland) is dlopen'd at runtime and therefore invisible
-# to autoPatchelfHook. Every shipped binary is wrapped with LD_LIBRARY_PATH.
+# glibc-2.35 build (filmcraft/effectcraft/deckcraft add libasound) — while
+# the winit/wgpu-style GUI stack (EGL, Vulkan, X11, xkbcommon, wayland) is
+# dlopen'd at runtime and therefore invisible to autoPatchelfHook. Every
+# shipped binary is wrapped with LD_LIBRARY_PATH.
 {
   lib,
   stdenv,
-  runCommand,
-  runtimeShell,
   fetchurl,
   makeWrapper,
   autoPatchelfHook,
-  # dlopen'd GUI runtime base set (mirrors the RPM `requires` metadata)
+  # NEEDED: libgcc_s.so.1 — not provided by stdenv glibc
   libgcc,
+  # dlopen'd GUI runtime base set (mirrors the RPM `requires` metadata)
   libGL,
   vulkan-loader,
   libxkbcommon,
@@ -38,15 +38,12 @@
   description,
   # SRI hashes of the release tarballs per system:
   #   hashes = { x86_64-linux = "sha256-..."; aarch64-linux = "sha256-..."; }
-  # (grep the app's SHA256SUMS.txt; convert with
-  #  `nix hash convert --to sri --hash-algo sha256 <hex>`)
-  # Only required when linuxAssets = true.
-  hashes ? { },
-  # extra runtime (dlopen'd) libs beyond the GUI base set
+  # (take hex from the release's SHA256SUMS.txt — or just run
+  #  `just bump <app> <version>`)
+  hashes,
+  # extra runtime libs beyond the GUI base set (e.g. alsa-lib for apps that
+  # link libasound.so.2 directly)
   runtimeLibs ? [ ],
-  # false for apps without Linux release assets (artcraft: mac/win only;
-  # soundcraft: no releases yet) — emits a placeholder stub instead
-  linuxAssets ? true,
 }@args:
 
 let
@@ -69,98 +66,59 @@ let
   ];
   allRuntimeLibs = defaultRuntimeLibs ++ runtimeLibs;
 in
-assert
-  linuxAssets -> hashes != { } || throw "${pname}: linuxAssets = true requires per-system hashes";
-if linuxAssets then
-  stdenv.mkDerivation {
-    inherit pname version;
-    src = fetchurl {
-      url = "https://github.com/${repo}/releases/download/v${version}/${pname}-${version}-linux-${
-        ghArch.${stdenv.hostPlatform.system}
-      }.tar.gz";
-      hash = hashes.${stdenv.hostPlatform.system};
-    };
-    nativeBuildInputs = [
-      autoPatchelfHook
-      makeWrapper
+assert hashes != { } || throw "${pname}: requires per-system hashes";
+
+stdenv.mkDerivation {
+  inherit pname version;
+  src = fetchurl {
+    url = "https://github.com/${repo}/releases/download/v${version}/${pname}-${version}-linux-${
+      ghArch.${stdenv.hostPlatform.system}
+    }.tar.gz";
+    hash = hashes.${stdenv.hostPlatform.system};
+  };
+  nativeBuildInputs = [
+    autoPatchelfHook
+    makeWrapper
+  ];
+  buildInputs = allRuntimeLibs;
+  # tarball root is the /usr tree: bin/ + share/ (single top dir is
+  # auto-stripped by the default unpackPhase)
+  installPhase = ''
+    runHook preInstall
+    mkdir -p $out
+    cp -r bin share $out/
+    runHook postInstall
+  '';
+  postFixup = ''
+    for exe in $out/bin/*; do
+      wrapProgram "$exe" \
+        --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath allRuntimeLibs}
+    done
+  '';
+  meta = {
+    inherit description;
+    homepage = "https://github.com/${repo}";
+    # upstream dual-licenses the binaries (LICENSE-APACHE + LICENSE-MIT)
+    license = with lib.licenses; [
+      asl20
+      mit
     ];
-    buildInputs = allRuntimeLibs;
-    # tarball root is the /usr tree: bin/ + share/ (single top dir is
-    # auto-stripped by the default unpackPhase)
-    installPhase = ''
-      runHook preInstall
-      mkdir -p $out
-      cp -r bin share $out/
-      runHook postInstall
-    '';
-    postFixup = ''
-      for exe in $out/bin/*; do
-        wrapProgram "$exe" \
-          --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath allRuntimeLibs}
-      done
-    '';
-    meta = {
-      inherit description;
-      homepage = "https://github.com/${repo}";
-      license = lib.licenses.asl20;
-      mainProgram = pname;
-      platforms = systems;
+    mainProgram = pname;
+    platforms = systems;
+  };
+  passthru = {
+    inherit pname version repo;
+    upstream = {
+      # assets published for every Linux release
+      artifacts = [
+        "tar.gz"
+        "rpm"
+        "deb"
+        "AppImage"
+        "flatpak"
+      ];
+      checksums = "SHA256SUMS.txt";
     };
-    passthru = {
-      inherit pname version repo;
-      upstream = {
-        # false = no Linux release assets upstream yet
-        inherit linuxAssets;
-        # assets published for every Linux release
-        artifacts = [
-          "tar.gz"
-          "rpm"
-          "deb"
-          "AppImage"
-          "flatpak"
-        ];
-        checksums = "SHA256SUMS.txt";
-      };
-    }
-    // (args.passthru or { });
   }
-else
-  runCommand "${pname}-${version}-placeholder"
-    {
-      meta = {
-        description = "${description} (placeholder — nix packaging not implemented yet)";
-        homepage = "https://github.com/${repo}";
-        license = lib.licenses.asl20;
-        mainProgram = pname;
-        platforms = [
-          "aarch64-linux"
-          "x86_64-linux"
-        ];
-      };
-      passthru = {
-        inherit pname version repo;
-        upstream = {
-          # false = no Linux release assets upstream yet
-          inherit linuxAssets;
-          # assets published for every Linux release; the future builder picks one
-          artifacts = [
-            "tar.gz"
-            "rpm"
-            "deb"
-            "AppImage"
-            "flatpak"
-          ];
-          checksums = "SHA256SUMS.txt";
-        };
-      }
-      // (args.passthru or { });
-    }
-    ''
-      mkdir -p $out/bin
-      {
-        echo '#!${runtimeShell}'
-        echo 'echo "${pname} ${version}: nix packaging not implemented yet" >&2'
-        echo 'exit 1'
-      } > "$out/bin/${pname}"
-      chmod +x "$out/bin/${pname}"
-    ''
+  // (args.passthru or { });
+}

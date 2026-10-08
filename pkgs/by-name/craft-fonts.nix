@@ -28,10 +28,6 @@ runCommand "craft-fonts-${version}"
     };
     passthru = {
       inherit rev version;
-      updateScript = [
-        "nix flake prefetch"
-        "github:storytold/craft-fonts"
-      ];
     };
   }
   ''

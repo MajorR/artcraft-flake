@@ -1,5 +1,6 @@
-# Suite bundles: nested convenience packages under packages.<system>.suites.*.
-# Suite membership lives ONLY here — moving an app between suites is one word.
+# Suite bundles: nested convenience packages under legacyPackages.suites.*
+# (flake-parts' `packages` option is strictly flat). Suite membership lives
+# ONLY here — moving an app between suites is one word.
 # Recipes:
 #   new app  -> create pkgs/by-name/<app>.nix, then add it to a suite list below
 #   new suite-> add a list to this file's let-block and wire it into `suites`
@@ -8,7 +9,6 @@
     { self', pkgs, ... }:
     let
       inherit (self'.packages)
-        artcraft
         cadcraft
         craft-fonts
         deckcraft
@@ -19,7 +19,6 @@
         lightcraft
         photocraft
         printcraft
-        soundcraft
         vectorcraft
         wordcraft
         ;
@@ -39,18 +38,10 @@
         wordcraft
       ];
       cad = [ cadcraft ];
-      audio = [ soundcraft ];
-      art = [ artcraft ];
 
       suites = {
-        inherit
-          creative
-          office
-          cad
-          audio
-          art
-          ;
-        all = [ craft-fonts ] ++ creative ++ office ++ cad ++ audio ++ art;
+        inherit creative office cad;
+        all = [ craft-fonts ] ++ creative ++ office ++ cad;
       };
     in
     {
