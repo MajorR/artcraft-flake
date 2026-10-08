@@ -16,6 +16,9 @@
   # upstream GitHub slug, e.g. "storytold/photocraft"
   repo,
   description,
+  # false for apps without Linux release assets (artcraft: mac/win only;
+  # soundcraft: no releases yet) — the real builder must skip/special-case them
+  linuxAssets ? true,
 }@args:
 
 runCommand "${pname}-${version}-placeholder"
@@ -33,6 +36,8 @@ runCommand "${pname}-${version}-placeholder"
     passthru = {
       inherit pname version repo;
       upstream = {
+        # false = no Linux release assets upstream yet
+        inherit linuxAssets;
         # assets published for every Linux release; the future builder picks one
         artifacts = [
           "tar.gz"
