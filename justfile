@@ -28,3 +28,8 @@ outdated:
 # bump every outdated app to its latest release
 bump-all:
     script/bump-all.sh
+
+# push package closures to cachix, e.g. just cache-push .#suites.all
+# (needs ARTCRAFT_CACHE and CACHIX_AUTH_TOKEN in the environment)
+cache-push *targets:
+    cachix push "$ARTCRAFT_CACHE" {{targets}}

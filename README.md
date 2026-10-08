@@ -17,6 +17,16 @@ Packages come flat (`.#photocraft`) and grouped into suite bundles (`.#suites.of
 
 Upstream releases multiple times per day — pins here are batched snapshots. Check drift with `just outdated`, catch up with `just bump-all`. Note: printcraft was renamed upstream to **pdfcraft** (binary and assets flipped in v0.4.0).
 
+### Why not Flathub (yet)?
+
+These apps exist on Flathub; this flake deliberately packages upstream tarballs while the suite is in fast-moving 0.x:
+
+- **No publish delay** — Flathub updates lag upstream by hours-to-days; here a batch bump is one command (and a daily automation job keeps pins ≤1 day old).
+- **Nix-native** — one store path per app under home-manager, no parallel Flatpak-runtime universe (hundreds of MB per app group), no sandbox/portal friction, declarative pins in `flake.lock`.
+- **Cheap to own** — the bump tooling absorbs upstream churn (renames, new libs) that Flatpak maintainers would otherwise absorb for you.
+
+Revisit at upstream 1.0 — or whenever Flathub's lag stops mattering more than maintenance. Switching means `services.flatpak.packages` refs and retiring the app files; the suite bundling and `craft-fonts` stay useful either way.
+
 ## Usage
 
 ```bash

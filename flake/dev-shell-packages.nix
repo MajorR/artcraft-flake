@@ -17,6 +17,10 @@
   pkgs.gh
   pkgs.jq
 
+  # pin-durability: push fetched tarball closures to a cachix cache
+  # (just cache-push; needs ARTCRAFT_CACHE + CACHIX_AUTH_TOKEN)
+  pkgs.cachix
+
   # binary repackaging kit (tarball / rpm / deb / AppImage sources)
   pkgs.patchelf
   pkgs.dpkg # inspect upstream .deb assets
