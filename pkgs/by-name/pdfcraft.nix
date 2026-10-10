@@ -6,11 +6,11 @@
 }:
 mk-craft-app {
   pname = "pdfcraft";
-  version = "0.4.0";
+  version = "0.5.0";
   repo = "storytold/pdfcraft";
   description = "Open-source PDF app — clean-room reimplementation of Acrobat";
   hashes = {
-    aarch64-linux = "sha256-CLL/bFOK2zzAioiBSjzObu4Jy5jJr5NMOTpRMaMVWQ4=";
-    x86_64-linux = "sha256-SHmzzbTRJhlFrwOxxfAPPoaNBehOd5EZYMrFBaoWwds=";
+    aarch64-linux = "sha256-J+WLjrrOvKbE5LMRCr0HelysAXCYcinT7Gncs1/LT4Q=";
+    x86_64-linux = "sha256-ILNbP9CZwO8Cpye/m6267rZjnFZ0K00ERMwpdNv/X98=";
   };
 }
