@@ -19,6 +19,7 @@
         lightcraft
         pdfcraft
         photocraft
+        solvecraft
         vectorcraft
         wordcraft
         ;
@@ -37,7 +38,10 @@
         pdfcraft
         wordcraft
       ];
-      cad = [ cadcraft ];
+      cad = [
+        cadcraft
+        solvecraft
+      ];
 
       suites = {
         inherit creative office cad;

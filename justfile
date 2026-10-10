@@ -15,7 +15,7 @@ build app:
 
 # list latest upstream releases for an app
 releases app:
-    gh release list --repo storytold/{{app}} --limit 5
+    gh release list --repo "$(sed -n 's/.*repo = "\(.*\)";/\1/p' pkgs/by-name/{{app}}.nix)" --limit 5
 
 # bump an app to a new upstream release, e.g. just bump photocraft 0.4.0
 bump app version:

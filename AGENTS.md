@@ -18,12 +18,13 @@ Nix flake packaging the **ArtCraft Crafting Apps** suite (https://getartcraft.co
 |---|---|---|
 | `creative` | photocraft 0.5.0, vectorcraft 0.7.0, lightcraft 0.4.0, filmcraft 0.4.0, effectcraft 0.6.0, designcraft 0.4.0 | Photoshop, Illustrator, Lightroom, Premiere Pro, After Effects, InDesign |
 | `office` | wordcraft 0.3.0, gridcraft 0.3.0, deckcraft 0.3.0, pdfcraft 0.4.0 | Word, Excel, PowerPoint, Acrobat Pro |
-| `cad` | cadcraft 0.3.0 | AutoCAD |
+| `cad` | cadcraft 0.3.0, solvecraft 0.1.2 | AutoCAD, Fusion 360 |
 | `all` | everything above + **craft-fonts** | — |
 
 - `craft-fonts` is a real (non-placeholder) package: fonts are plain assets in the repo, pinned rev, OFL-1.1; installed to `$out/share/fonts/{truetype,opentype}`. Only included in `suites.all` — apps/users pick it up explicitly.
 - **printcraft was renamed upstream to `pdfcraft`** — the repo long ago, and as of v0.4.0 the release assets and binary are `pdfcraft-*` too, so our pname followed (`pkgs/by-name/pdfcraft.nix`). Anyone consuming `.#printcraft` must switch to `.#pdfcraft`.
 - **Not packaged** (no Linux releases upstream): `artcraft` (macOS/Windows only) and `soundcraft` (no releases at all). Add them when Linux assets appear — a new app file + a suite entry is all it takes.
+- **Not all "craft" apps are from storytold**: `solvecraft` is community dev `bherbruck/solvecraft` (same release pattern, same naming). The tooling reads each app's repo from its file — `just releases`, `just outdated`, and `just bump-all` all work across orgs.
 - **Upstream releases multiple times per day.** Versions here are batched snapshots — check drift with `just outdated`, catch up with `just bump-all`; don't chase every release (each bump re-downloads ~60MB per app per building machine). A scheduled opencode job (`artcraft-daily-bump`, 06:00 daily) runs this: bump → check → build `suites.all` → commit (never push). The drift scripts resolve versions via the `/releases/latest` redirect header — no api.github.com calls, no rate limit (the unauthenticated API quota is 60/hour and dies fast).
 - **Scheduler plumbing is hand-patched for NixOS.** The opencode-scheduler generates systemd units with an invalid `OnCalendar` (leading `*`) and a macOS-style `/usr/bin/perl` ExecStart. The installed units (`~/.config/systemd/user/opencode-job-artcraft-*`) were fixed manually: `OnCalendar=*-*-* 06:00:00`, `ExecStart=/run/current-system/sw/bin/perl`, NixOS PATH. Re-apply the patch if the job is re-registered. Job def: `~/.config/opencode/scheduler/scopes/artcraft-538deba2186c/jobs/artcraft-daily-bump.json`; logs: `~/.config/opencode/logs/scheduler/artcraft-538deba2186c/artcraft-daily-bump.log`.
 - **Flathub alternative: declined for now** (staged decision — see "Why not Flathub (yet)?" in README). Revisit at upstream 1.0 or if maintenance outgrows the value.
