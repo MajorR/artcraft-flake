@@ -6,11 +6,11 @@
 }:
 mk-craft-app {
   pname = "solvecraft";
-  version = "0.1.3";
+  version = "0.1.6";
   repo = "bherbruck/solvecraft";
   description = "Open-source parametric 3D CAD — clean-room reimplementation of Autodesk Fusion 360";
   hashes = {
-    aarch64-linux = "sha256-VSjoeGwug0CyVsVZOq3Y3uptrqxs99ZMjWkp7PzvP/A=";
-    x86_64-linux = "sha256-WQ3Mk99Da0wCEgd52epePoO/STjzK2YKRCRLh/oQrUE=";
+    aarch64-linux = "sha256-BJMk3SnosFuAioZCzG5RK2HxmEu4EiUhaLzDbkGQr94=";
+    x86_64-linux = "sha256-shg+MxhjCjDg9RjsiQ2fEzcWf+tBrXa2GFkVE+wn/8o=";
   };
 }

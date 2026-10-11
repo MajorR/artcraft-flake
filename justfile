@@ -29,6 +29,18 @@ outdated:
 bump-all:
     script/bump-all.sh
 
+# run the scheduled daily-bump task now (same unit the 06:00 timer fires)
+update:
+    #!/usr/bin/env bash
+    set -u
+    unit=opencode-job-artcraft-538deba2186c-artcraft-daily-bump.service
+    log="$HOME/.config/opencode/logs/scheduler/artcraft-538deba2186c/artcraft-daily-bump.log"
+    off=$(stat -c%s "$log" 2>/dev/null || echo 0)
+    systemctl --user start "$unit"; rc=$?
+    echo "── this run (full log: $log) ──"
+    tail -c +"$((off + 1))" "$log"
+    exit "$rc"
+
 # push package closures to cachix, e.g. just cache-push .#suites.all
 # (needs ARTCRAFT_CACHE and CACHIX_AUTH_TOKEN in the environment)
 cache-push *targets:

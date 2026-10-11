@@ -65,4 +65,5 @@ just check                # nix flake check
 just build <app>          # nix build .#<app>
 just releases <app>       # latest upstream releases via gh
 just bump <app> <version> # rewrite version + SRI hashes from SHA256SUMS.txt
+just update               # run the scheduled daily-bump task now (same systemd unit the 06:00 timer fires)
 ```
